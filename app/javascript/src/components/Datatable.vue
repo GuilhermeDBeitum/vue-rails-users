@@ -1,5 +1,26 @@
 <template>
   <v-container text-xs-center grid-list-lg>
+    <v-row>
+      <v-col md="3">
+        <v-btn
+          color="orange"
+          class="zdex font-weight-black"
+          dark
+          @click="dialog = true"
+          fixed
+          bottom
+          right
+          fab
+          large
+        >
+          +
+        </v-btn>
+      </v-col>
+      <v-col>
+        <v-divider class="mx-4" inset vertical></v-divider>
+      </v-col>
+    </v-row>
+
     <v-card>
       <v-col class="text-center" cols="12">
         <h2 class="white text-xs-center headline">Users</h2>
@@ -13,33 +34,15 @@
       >
         <template v-slot:top>
           <v-toolbar flat>
-            <v-row>
-              <v-col md="3">
-                <v-btn
-                  color="blue"
-                  class="font-weight-black"
-                  v-bind="attrs"
-                  v-on="on"
-                  dark
-                  @click="dialog = true"
-                >
-                  ADD
-                </v-btn>
-              </v-col>
-              <v-col>
-                <v-divider class="mx-4" inset vertical></v-divider>
-              </v-col>
-            </v-row>
-
             <v-spacer></v-spacer>
 
             <v-col md="4">
               <v-text-field
+                color="orange"
                 v-model="search"
                 append-icon="mdi-magnify"
                 single-line
                 hide-details
-                solo
               ></v-text-field>
             </v-col>
           </v-toolbar>
@@ -56,27 +59,46 @@
     </v-card>
 
     <v-dialog v-model="dialog" width="255">
-      <v-card class="box">
+      <v-card class="dialog">
+        <v-snackbar
+          :timeout="timeout"
+          color="orange"
+          bottom
+          fixed
+          shaped
+          elevation="24"
+          v-model="bar"
+          class="front"
+        >
+          {{ print }}
+        </v-snackbar>
+
         <v-card-title>
           <strong
             ><p>{{ formTitle }}</p></strong
           >
         </v-card-title>
 
-        <v-form ref="form">
+        <v-form ref="form" v-model="valid" lazy-validation>
           <v-row class="color: white" cols="9" md="12">
             <v-col cols="10" md="12">
               <v-text-field
+                color="orange"
                 v-model="editedItem.user"
                 label="User"
+                :rules="userRules"
+                required
               ></v-text-field>
             </v-col>
 
             <v-col cols="8" md="12">
               <v-text-field
+                color="orange"
                 type="text"
                 v-model="editedItem.email"
                 label="Email"
+                :rules="emailRules"
+                required
               ></v-text-field>
             </v-col>
           </v-row>
@@ -88,7 +110,13 @@
             </v-col>
 
             <v-col cols="6" md="6">
-              <v-btn class="white--text" color="blue" @click="save">Save</v-btn>
+              <v-btn
+                class="white--text"
+                color="orange"
+                v-on:keyup.enter="validate"
+                @click="validate"
+                >Save</v-btn
+              >
             </v-col>
           </v-row>
         </v-form>
@@ -110,8 +138,12 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-          <v-btn color="red darken-1" text @click="deleteItemConfirm">OK</v-btn>
+          <v-btn color="orange darken-1" text @click="closeDelete"
+            >Cancel</v-btn
+          >
+          <v-btn color="orange darken-1" text @click="deleteItemConfirm"
+            >OK</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -122,9 +154,12 @@
 export default {
   data: () => ({
     search: "",
+    print: "enter an user and email!",
     dialog: false,
     dialogRegister: false,
     dialogDelete: false,
+    valid: true,
+    bar: false,
     headers: [
       { text: "User", value: "user", width: 300 },
       { text: "Email", value: "email", width: 350 },
@@ -140,6 +175,12 @@ export default {
       user: "",
       email: "",
     },
+    timeout: 1600,
+    userRules: [(v) => !!v || "Enter an user!"],
+    emailRules: [
+      (v) => !!v || "Enter an email!",
+      (v) => /.+@.+\..+/.test(v) || "Enter a valid email address!",
+    ],
   }),
 
   computed: {
@@ -162,6 +203,15 @@ export default {
   },
 
   methods: {
+    validate() {
+      if (this.userRules && this.emailRuless) {
+        this.$refs.form.validate();
+        this.bar = true;
+      } else if (this.$refs.form.validate() != false) {
+        this.save();
+      }
+    },
+
     initialize() {
       this.users = [];
     },
@@ -212,6 +262,15 @@ export default {
 </script>
 <style scoped>
 .box {
-  padding: 22px;
+  padding: 23px;
+}
+
+.zdex {
+  z-index: 100;
+}
+
+.dialog {
+  border-radius: 20px;
+  padding: 23px;
 }
 </style>
