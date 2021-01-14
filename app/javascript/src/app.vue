@@ -1,22 +1,43 @@
 <template>
-  <div id="app">
-    <p>{{ message }}</p>
-  </div>
+  <v-app>
+    <template>
+      <v-card>
+          <v-row>
+            <v-col cols="12" sm="12" class="text-center black--text">
+              <h1>OPERAND</h1>
+            </v-col>
+          </v-row>
+
+        <router-view></router-view>
+
+      <v-footer padless  app>
+      <v-col class="text-center" cols="12">
+        <strong>&copy; OPERAND {{new Date().toISOString().substr(0,4)}}</strong>
+      </v-col>
+    </v-footer>
+
+        <v-menu
+          v-model="menu"
+          :close-on-content-click="false"
+          :nudge-width="200"
+          offset-y
+        >
+        </v-menu>
+      </v-card>
+    </template>
+  </v-app>
 </template>
 
 <script>
 export default {
-  data: function () {
-    return {
-      message: "Hello Vue!"
-    }
-  }
-}
-</script>
+  name: `app`,
+  props: {
+    source: String,
+  },
 
-<style scoped>
-p {
-  font-size: 2em;
-  text-align: center;
-}
-</style>
+  data: () => ({
+    menu: false,
+  }),
+
+};
+</script>
