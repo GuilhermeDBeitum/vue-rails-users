@@ -8,7 +8,7 @@
             </v-col>
           </v-row>
 
-        <router-view></router-view>
+      <datatable/>
 
       <v-footer padless  app>
       <v-col class="text-center" cols="12">
@@ -28,11 +28,17 @@
   </v-app>
 </template>
 
+
 <script>
+
+import Datatable from './components/Datatable.vue';
 export default {
   name: `app`,
   props: {
     source: String,
+  },
+  components:{
+    Datatable
   },
 
   data: () => ({
