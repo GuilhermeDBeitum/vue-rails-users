@@ -1,6 +1,6 @@
 <template>
   <v-container text-xs-center grid-list-lg>
-    <v-overlay :value="loading">
+    <v-overlay :value="$store.state.modinfo.loading">
       <v-card-text>
         Loading...
         <v-progress-linear
@@ -16,7 +16,7 @@
           color="orange"
           class="zdex font-weight-black"
           dark
-          @click="dialog = true"
+          @click="(dialog = true), resetImput()"
           fixed
           bottom
           right
@@ -37,7 +37,7 @@
       </v-col>
       <v-data-table
         :headers="headers"
-        :items="users"
+        :items="$store.state.modinfo.users"
         :search="search"
         sort-by="users"
         class="elevation-1"
@@ -94,7 +94,7 @@
             <v-col cols="10" md="12">
               <v-text-field
                 color="orange"
-                v-model="editedItem.user"
+                v-model="$store.state.modinfo.username"
                 label="User"
                 :rules="userRules"
                 v-on:keyup.enter="validate"
@@ -106,7 +106,7 @@
               <v-text-field
                 color="orange"
                 type="text"
-                v-model="editedItem.email"
+                v-model="$store.state.modinfo.email"
                 label="Email"
                 :rules="emailRules"
                 v-on:keyup.enter="validate"
@@ -126,7 +126,7 @@
             </v-col>
 
             <v-col cols="6" md="6">
-              <v-btn class="white--text" color="orange" @click="validate(item)"
+              <v-btn class="white--text" color="orange" @click="validate()"
                 >Save</v-btn
               >
             </v-col>
@@ -164,30 +164,28 @@
 
 <script>
 import axios from "axios";
+import { mapGetters } from "vuex";
 export default {
   data: () => ({
     search: "",
     print: "enter an user and email!",
-    loading: false,
     dialog: false,
     dialogRegister: false,
     dialogDelete: false,
     valid: true,
     bar: false,
     headers: [
-      { text: "User", value: "user", width: 300 },
+      { text: "User", value: "username", width: 300 },
       { text: "Email", value: "email", width: 350 },
       { text: "Actions", value: "actions", sortable: false, width: 150 },
     ],
     obj: {},
-    users: [],
-    editedIndex: -1,
     editedItem: {
-      user: "",
+      username: "",
       email: "",
     },
     defaultItem: {
-      user: "",
+      username: "",
       email: "",
     },
     timeout: 1600,
@@ -199,14 +197,77 @@ export default {
   }),
 
   computed: {
+    ...mapGetters(["id, username, email, item, editedIndex, loading"]),
+
+    id: {
+      get() {
+        return this.$store.state.id;
+      },
+
+      set(newId) {
+        this.$store.commit("SET_ID", newId);
+      },
+    },
+
+    username: {
+      get() {
+        return this.$store.state.editedItem.username;
+      },
+
+      set(newUsername) {
+        this.$store.commit("SET_USER", newUsername);
+      },
+    },
+
+    email: {
+      get() {
+        return this.$store.state.editedItem.email;
+      },
+
+      set(newEmail) {
+        this.$store.commit("SET_EMAIL", newEmail);
+      },
+    },
+
+    editedIndex: {
+      get() {
+        return this.$store.state.editedIndex;
+      },
+
+      set(newEditedIndex) {
+        this.$store.commit("SET_EDITED_INDEX", newEditedIndex);
+      },
+    },
+
+    item: {
+      get() {
+        return this.$store.state.item;
+      },
+
+      set(newItem) {
+        this.$store.commit("SET_ITEM", item);
+      },
+    },
+
+    loading: {
+      get() {
+        return this.$store.state.loading;
+      },
+
+      set(newLoading) {
+        this.$store.commit("SET_LOADING", newLoading);
+      },
+    },
+
     formTitle() {
-      return this.editedIndex === -1 ? "USER REGISTRATION" : "EDIT USER";
+      return this.$store.state.modinfo.editedIndex === -1
+        ? "USER REGISTRATION"
+        : "EDIT USER";
     },
   },
 
   methods: {
-    validate(item) {
-      console.log(item);
+    validate() {
       if (this.userRules && this.emailRuless) {
         this.$refs.form.validate();
         this.bar = true;
@@ -215,78 +276,39 @@ export default {
       }
     },
 
-    initializeUsers() {
-      this.loading = true;
-      return axios
-        .get("http://localhost:3000/users")
-        .then((response) => {
-          this.users = response.data;
-          this.loading = false;
-        })
-        .catch((e) => {
-          console.log(e);
-        });
+    async initializeUsers() {
+      await this.$store.dispatch("initializeUsers");
     },
 
-    getUser(item) {
-      axios
-        .get(`https://localhost:3000/${item.id}`)
-        .then((response) => {
-          this.users = response.data;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+    async getUser(item) {
+      await this.$store.dispatch("getUser");
     },
 
-    saveUser(item) {
-      if (this.editedIndex > -1) {
-        axios
-          .put(`http://localhost:3000/users/${item.id}`, {
-            id: this.editedItem.id,
-            user: this.editedItem.user,
-            email: this.editedItem.email,
-          })
-          .then((response) => {
-            this.initializeUsers();
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-        this.dialog = false;
-      } else {
-        axios
-          .post(`http://localhost:3000/users/`, {
-            user: this.editedItem,
-          })
-          .then((response) => {
-            this.initializeUsers();
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-        this.dialog = false;
-      }
+    async saveUser() {
+      this.dialog = false;
+      this.$store.state.modinfo.editedItem = {};
+      this.$store.dispatch("saveUser");
+    },
+
+    async deleteUser(item) {
+      this.$store.state.modinfo.item = item;
+      this.dialogDelete = false;
+      await this.$store.dispatch("deleteUser");
     },
 
     editUser(item) {
-      this.editedIndex = item.id;
-      this.editedItem = Object.assign({}, item);
+      this.$store.state.modinfo.editedIndex = item.id;
+      this.$store.state.modinfo.id = item.id;
+      this.$store.state.modinfo.username = item.username;
+      this.$store.state.modinfo.email = item.email;
       this.dialog = true;
+      this.editedItem = Object.assign(item, {});
     },
 
-    deleteUser(item) {
-      const index = this.users.indexOf(item);
-      axios
-        .delete(`http://localhost:3000/users/${item.id}`)
-        .then((response) => {
-          this.initializeUsers();
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      this.users.splice(index, 1);
-      this.dialogDelete = false;
+    resetImput() {
+      this.$store.state.modinfo.username = "";
+      this.$store.state.modinfo.email = "";
+      this.$store.state.modinfo.editedIndex = -1;
     },
   },
 

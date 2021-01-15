@@ -7,26 +7,25 @@
 
 import Vue from "vue";
 import Vuetify from "vuetify";
-import "vuetify/dist/vuetify.min.css"; 
+import "vuetify/dist/vuetify.min.css";
 import App from "../src/app.vue";
-import '@mdi/font/css/materialdesignicons.css'
+import "@mdi/font/css/materialdesignicons.css";
+import store from "../src/vuex/store";
 
-Vue.use(Vuetify); 
-const vuetify = new Vuetify(); 
+Vue.use(Vuetify);
+const vuetify = new Vuetify();
 
 document.addEventListener("DOMContentLoaded", () => {
   const app = new Vue({
     vuetify,
+    store,
     icons: {
-      iconfont: 'mdi',
+      iconfont: "mdi",
     },
-    render: h => h(App)
+    render: (h) => h(App),
   }).$mount();
   document.body.appendChild(app.$el);
-
-  console.log(app);
 });
-
 
 // The above code uses Vue without the compiler, which means you cannot
 // use Vue to target elements in your existing html templates. You would
@@ -40,7 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
 //   {{message}}
 //   <app></app>
 // </div>
-
 
 // import Vue from 'vue/dist/vue.esm'
 // import App from '../app.vue'
