@@ -3,6 +3,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '3.0.0'
 
+gem 'rack-cors', '~> 0.4.0'
 # Use foreman to raise multiple services
 gem "foreman"
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'

@@ -1,5 +1,15 @@
 <template>
   <v-container text-xs-center grid-list-lg>
+    <v-overlay :value="loading">
+      <v-card-text>
+        Loading...
+        <v-progress-linear
+          indeterminate
+          color="orange"
+          class="mb-0"
+        ></v-progress-linear>
+      </v-card-text>
+    </v-overlay>
     <v-row>
       <v-col md="3">
         <v-btn
@@ -48,10 +58,10 @@
           </v-toolbar>
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon small class="mr-2" @click="editItem(item)">
+          <v-icon small class="mr-2" @click="editUser(item)">
             mdi-pencil
           </v-icon>
-          <v-icon small @click="deleteItem(item)">
+          <v-icon small @click="(dialogDelete = true), (obj = item)">
             mdi-delete
           </v-icon>
         </template>
@@ -87,6 +97,7 @@
                 v-model="editedItem.user"
                 label="User"
                 :rules="userRules"
+                v-on:keyup.enter="validate"
                 required
               ></v-text-field>
             </v-col>
@@ -98,23 +109,24 @@
                 v-model="editedItem.email"
                 label="Email"
                 :rules="emailRules"
+                v-on:keyup.enter="validate"
                 required
               ></v-text-field>
             </v-col>
           </v-row>
           <v-row class="box" no-gutters>
             <v-col cols="6" md="6">
-              <v-btn width="70" class="black--text" color="white" @click="close"
+              <v-btn
+                width="70"
+                class="black--text"
+                color="white"
+                @click="dialog = false"
                 >Cancel</v-btn
               >
             </v-col>
 
             <v-col cols="6" md="6">
-              <v-btn
-                class="white--text"
-                color="orange"
-                v-on:keyup.enter="validate"
-                @click="validate"
+              <v-btn class="white--text" color="orange" @click="validate(item)"
                 >Save</v-btn
               >
             </v-col>
@@ -138,10 +150,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="orange darken-1" text @click="closeDelete"
+          <v-btn color="orange darken-1" text @click="dialogDelete = false"
             >Cancel</v-btn
           >
-          <v-btn color="orange darken-1" text @click="deleteItemConfirm"
+          <v-btn color="orange darken-1" text @click="deleteUser(obj)"
             >OK</v-btn
           >
         </v-card-actions>
@@ -151,10 +163,12 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   data: () => ({
     search: "",
     print: "enter an user and email!",
+    loading: false,
     dialog: false,
     dialogRegister: false,
     dialogDelete: false,
@@ -165,6 +179,7 @@ export default {
       { text: "Email", value: "email", width: 350 },
       { text: "Actions", value: "actions", sortable: false, width: 150 },
     ],
+    obj: {},
     users: [],
     editedIndex: -1,
     editedItem: {
@@ -189,74 +204,94 @@ export default {
     },
   },
 
-  watch: {
-    dialog(val) {
-      val || this.close();
-    },
-    dialogDelete(val) {
-      val || this.closeDelete();
-    },
-  },
-
-  created() {
-    this.initialize();
-  },
-
   methods: {
-    validate() {
+    validate(item) {
+      console.log(item);
       if (this.userRules && this.emailRuless) {
         this.$refs.form.validate();
         this.bar = true;
       } else if (this.$refs.form.validate() != false) {
-        this.save();
+        this.saveUser();
       }
     },
 
-    initialize() {
-      this.users = [];
+    initializeUsers() {
+      this.loading = true;
+      return axios
+        .get("http://localhost:3000/users")
+        .then((response) => {
+          this.users = response.data;
+          this.loading = false;
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     },
 
-    editItem(item) {
-      this.editedIndex = this.users.indexOf(item);
+    getUser(item) {
+      axios
+        .get(`https://localhost:3000/${item.id}`)
+        .then((response) => {
+          this.users = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+
+    saveUser(item) {
+      if (this.editedIndex > -1) {
+        axios
+          .put(`http://localhost:3000/users/${item.id}`, {
+            id: this.editedItem.id,
+            user: this.editedItem.user,
+            email: this.editedItem.email,
+          })
+          .then((response) => {
+            this.initializeUsers();
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        this.dialog = false;
+      } else {
+        axios
+          .post(`http://localhost:3000/users/`, {
+            user: this.editedItem,
+          })
+          .then((response) => {
+            this.initializeUsers();
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        this.dialog = false;
+      }
+    },
+
+    editUser(item) {
+      this.editedIndex = item.id;
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
 
-    deleteItem(item) {
-      this.editedIndex = this.users.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialogDelete = true;
-    },
-
-    deleteItemConfirm() {
-      this.users.splice(this.editedIndex, 1);
-      this.closeDelete();
-    },
-
-    close() {
-      this.dialog = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-
-    closeDelete() {
+    deleteUser(item) {
+      const index = this.users.indexOf(item);
+      axios
+        .delete(`http://localhost:3000/users/${item.id}`)
+        .then((response) => {
+          this.initializeUsers();
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      this.users.splice(index, 1);
       this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
     },
+  },
 
-    save() {
-      if (this.editedIndex > -1) {
-        Object.assign(this.users[this.editedIndex], this.editedItem);
-      } else {
-        this.users.push(this.editedItem);
-      }
-      this.close();
-    },
+  created() {
+    this.initializeUsers();
   },
 };
 </script>
