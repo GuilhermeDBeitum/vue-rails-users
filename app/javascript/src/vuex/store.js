@@ -1,7 +1,6 @@
 import Vue from "vue";
-import Vuex from "vuex";
 import axios from "axios";
-
+import Vuex from "vuex";
 Vue.use(Vuex);
 
 const SET_ID = "SET_ID";
@@ -77,8 +76,10 @@ const moduleInfo = {
           state.users = response.data;
           state.loading = false;
         })
-        .catch((e) => {
-          console.log(e);
+        .catch(() => {
+          Vue.toasted.error(
+            "Something is wrong and we are already solving it, try again later!!"
+          );
         });
     },
 
@@ -88,8 +89,10 @@ const moduleInfo = {
         .then((response) => {
           state.users = response.data;
         })
-        .catch((error) => {
-          console.log(error);
+        .catch(() => {
+          Vue.toasted.error(
+            "Something is wrong and we are already solving it, try again later!"
+          );
         });
     },
 
@@ -104,8 +107,10 @@ const moduleInfo = {
           .then(() => {
             return dispatch("initializeUsers");
           })
-          .catch((error) => {
-            console.log(error);
+          .catch(() => {
+            Vue.toasted.error(
+              "Something is wrong and we are already solving it, try again later!"
+            );
           });
       } else {
         axios
@@ -116,8 +121,10 @@ const moduleInfo = {
           .then(() => {
             return dispatch("initializeUsers");
           })
-          .catch((error) => {
-            console.log(error);
+          .catch(() => {
+            Vue.toasted.error(
+              "Something is wrong and we are already solving it, try again later!"
+            );
           });
       }
     },
@@ -128,8 +135,10 @@ const moduleInfo = {
         .then(() => {
           return dispatch("initializeUsers");
         })
-        .catch((error) => {
-          console.log(error);
+        .catch(() => {
+          Vue.toasted.error(
+            "Something is wrong and we are already solving it, try again later!"
+          );
         });
     },
   },
