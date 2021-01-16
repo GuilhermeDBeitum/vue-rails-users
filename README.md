@@ -4,9 +4,18 @@
 
 to start the application follow the steps below:
 
+## Installation
+
+- yarn install
+
 - yarn upgrade
 
-- rake db:migrate
+- bundle install
+
+- bundle exec rails db:migrate
+
+
+## Booting the app
 
 - foreman start
 
