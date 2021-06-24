@@ -14,6 +14,8 @@ to start the application follow the steps below:
 
 - bundle exec rails db:migrate
 
+- npm i --save-dev babel-preset-react
+
 
 ## Booting the app
 
